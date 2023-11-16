@@ -15,7 +15,7 @@ namespace MMK_AI_SentenceGenerator
         public struct Struct_Word_Tokens
         {
             public string word = "";
-            public ulong count = 0;
+            public int count = 0;
 
             /// <summary>
             /// Default ctor.
@@ -23,12 +23,20 @@ namespace MMK_AI_SentenceGenerator
             public Struct_Word_Tokens() { }
         }
 
+        #region MMK_AGI_Dataset_Constants
+
+        public const int SENTENCE_GENERATION_THRESHOLD = 6;
+
+        #endregion
+
         #region MMK_AGI_Dataset_Fields
 
         public static List<Struct_Word_Tokens> wordTokens = new List<Struct_Word_Tokens>();
-        public static ulong num_Sentiments = 0;
-        public static ulong num_Vocabs = 0;
-        public static ulong num_TotalWords = 0;
+        public static int num_Sentiments = 0;
+        public static int num_Vocabs = 0;
+        public static int num_TotalWords = 0;
+
+        public static List<string> corpus = new List<string>();
 
         #endregion
 
@@ -59,12 +67,15 @@ namespace MMK_AI_SentenceGenerator
 
                 num_Sentiments++;
 
+                // Update corpus content.
+                corpus.Add(sentiment);
+
                 Console.WriteLine("<s>");
 
                 var words = sentiment.Split(' ');
                 foreach ( var wordTk in words )
                 {
-                    if (wordTk == null)
+                    if (wordTk == null || String.IsNullOrEmpty(wordTk) || String.IsNullOrWhiteSpace(wordTk))
                         continue;
 
                     num_TotalWords++;
@@ -94,6 +105,73 @@ namespace MMK_AI_SentenceGenerator
 
             reader.Close();
             Console.WriteLine("End Function:  Dataset_GenerateWordTokens");
+        }
+
+        public static string NLP_GuessNextWord(string wi)
+        {
+            Console.WriteLine("Begin Function:  NLP_GuessNextWord");
+
+            float max_Probability = 0.0f;
+            string bestWord = wi;
+
+            foreach(var token in wordTokens)
+            {
+                float p = NLP_CalculateProbabilityAdd1BiGram(wi, token.word);
+                if (p < 0.0f)
+                    continue;
+
+                Console.WriteLine("P(" + wi + " | " + token.word + ")=\t" + p.ToString());
+
+                if(max_Probability < p)
+                {
+                    max_Probability = p;
+                    bestWord = token.word;
+                }
+            }
+
+            Console.WriteLine("Best guess:\t" + bestWord + "\twith probability:\t" + max_Probability.ToString());
+            Console.WriteLine("End Function:  NLP_GuessNextWord");
+
+            return bestWord;
+        }
+
+        public static float NLP_CalculateProbabilityAdd1BiGram(string wi, string wj)
+        {
+            var token_WiIndex = wordTokens.FindIndex(x => x.word == wi);
+            if (token_WiIndex < 0)
+                return -1.0f;
+
+            int N_WiWj = NLP_CountBiGrams(wi, wj);
+            int N_Wi = wordTokens[token_WiIndex].count;
+
+            return ((float)(N_WiWj + 1)) / ((float)(N_Wi + num_TotalWords + 1));
+        }
+
+        public static int NLP_CountBiGrams(string wi, string wj)
+        {
+            int resultOccs = 0;
+
+            foreach(var line in corpus)
+            {
+                if (String.IsNullOrEmpty(line) || String.IsNullOrWhiteSpace(line))
+                    continue;
+
+                var wordTokens = line.Split(' ');
+                for(int i = 0; i < wordTokens.Length; i++)
+                {
+                    string word = wordTokens[i];
+                    string nextWord = (i + 1 < wordTokens.Length) ? wordTokens[i + 1] : String.Empty;
+
+                    if (String.IsNullOrEmpty(word) ||
+                        String.IsNullOrWhiteSpace(word))
+                        continue;
+
+                    if (word == wi && nextWord == wj)
+                        resultOccs++;
+                }
+            }
+
+            return resultOccs;
         }
     }
 }
