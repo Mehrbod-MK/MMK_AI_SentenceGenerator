@@ -25,7 +25,7 @@ namespace MMK_AI_SentenceGenerator
 
         #region MMK_AGI_Dataset_Constants
 
-        public const int SENTENCE_GENERATION_THRESHOLD = 5;
+        public const int SENTENCE_GENERATION_THRESHOLD = 7;
 
         #endregion
 
@@ -142,6 +142,14 @@ namespace MMK_AI_SentenceGenerator
                 int randomNumber = random.Next(thresholdCandidates.Count);
 
                 bestWord = thresholdCandidates[randomNumber];
+                max_Probability = (float)threshold;
+            }
+            else if(thresholdCandidates.Count == 0 && threshold != null)
+            {
+                Random random = new Random((int)DateTime.Now.Ticks);
+                int randomNumber = random.Next(wordTokens.Count);
+
+                bestWord = wordTokens[randomNumber].word;
                 max_Probability = (float)threshold;
             }
 

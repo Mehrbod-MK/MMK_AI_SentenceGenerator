@@ -28,36 +28,42 @@
                 return -2;
             }
 
-            // Ask the user to enter a random number and choose from word tokens.
-            Console.Write("\nEnter a random vocab index (0-" +
-                (Dataset.num_Vocabs - 1).ToString() + "):\t");
-            var tempStr = Console.ReadLine();
-
-            int selected_VocabIndex = -1;
-            if(String.IsNullOrEmpty(tempStr) || String.IsNullOrWhiteSpace(tempStr))
-                selected_VocabIndex = 0;
-            else try
-                {
-                    selected_VocabIndex = int.Parse(tempStr);
-                }
-                catch(Exception)
-                {
-                    selected_VocabIndex = 0;
-                }
-
-            // Guess the next probable word until the end of sentiment.
-            int generatedWords = 0;
-            string guessedWord = Dataset.wordTokens[selected_VocabIndex].word;
-            string generatedSentence = guessedWord;
-            while(generatedWords < Dataset.SENTENCE_GENERATION_THRESHOLD)
+            while(true)
             {
-                guessedWord = Dataset.NLP_GuessNextWord(guessedWord, 0.0009f);
-                generatedSentence += ' ' + guessedWord;
-                generatedWords++;
+                // Ask the user to enter a random number and choose from word tokens.
+                Console.Write("\nEnter a random vocab index (0-" +
+                    (Dataset.num_Vocabs - 1).ToString() + "):\t");
+                var tempStr = Console.ReadLine();
+
+                if (tempStr == "quit" || tempStr == "exit")
+                    break;
+
+                int selected_VocabIndex = -1;
+                if (String.IsNullOrEmpty(tempStr) || String.IsNullOrWhiteSpace(tempStr))
+                    selected_VocabIndex = 0;
+                else try
+                    {
+                        selected_VocabIndex = int.Parse(tempStr);
+                    }
+                    catch (Exception)
+                    {
+                        selected_VocabIndex = 0;
+                    }
+                // Guess the next probable word until the end of sentiment.
+                int generatedWords = 0;
+                string guessedWord = Dataset.wordTokens[selected_VocabIndex].word;
+                string generatedSentence = guessedWord;
+                while (generatedWords < Dataset.SENTENCE_GENERATION_THRESHOLD)
+                {
+                    guessedWord = Dataset.NLP_GuessNextWord(guessedWord, 0.0009f);
+                    generatedSentence += ' ' + guessedWord;
+                    generatedWords++;
+                }
+                generatedSentence += ".";
+                Console.WriteLine("\nRESULT => " + generatedSentence);
+                Console.ReadLine();
             }
-            generatedSentence += ".";
-            Console.WriteLine("\nRESULT => " + generatedSentence);
-            Console.ReadLine();
+            
 
             return 0;
         }
