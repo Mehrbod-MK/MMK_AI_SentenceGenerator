@@ -25,7 +25,7 @@ namespace MMK_AI_SentenceGenerator
 
         #region MMK_AGI_Dataset_Constants
 
-        public const int SENTENCE_GENERATION_THRESHOLD = 6;
+        public const int SENTENCE_GENERATION_THRESHOLD = 5;
 
         #endregion
 
@@ -107,12 +107,14 @@ namespace MMK_AI_SentenceGenerator
             Console.WriteLine("End Function:  Dataset_GenerateWordTokens");
         }
 
-        public static string NLP_GuessNextWord(string wi)
+        public static string NLP_GuessNextWord(string wi, float? threshold = null)
         {
             Console.WriteLine("Begin Function:  NLP_GuessNextWord");
 
             float max_Probability = 0.0f;
             string bestWord = wi;
+
+            List<string> thresholdCandidates = new List<string>();
 
             foreach(var token in wordTokens)
             {
@@ -122,11 +124,25 @@ namespace MMK_AI_SentenceGenerator
 
                 Console.WriteLine("P(" + wi + " | " + token.word + ")=\t" + p.ToString());
 
-                if(max_Probability < p)
+                if(threshold != null)
+                {
+                    if (p >= threshold)
+                        thresholdCandidates.Add(token.word);
+                }
+                else if (max_Probability < p)
                 {
                     max_Probability = p;
                     bestWord = token.word;
                 }
+            }
+
+            if(thresholdCandidates.Count > 0 && threshold != null)
+            {
+                Random random = new Random((int)DateTime.Now.Ticks);
+                int randomNumber = random.Next(thresholdCandidates.Count);
+
+                bestWord = thresholdCandidates[randomNumber];
+                max_Probability = (float)threshold;
             }
 
             Console.WriteLine("Best guess:\t" + bestWord + "\twith probability:\t" + max_Probability.ToString());

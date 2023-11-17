@@ -51,7 +51,7 @@
             string generatedSentence = guessedWord;
             while(generatedWords < Dataset.SENTENCE_GENERATION_THRESHOLD)
             {
-                guessedWord = Dataset.NLP_GuessNextWord(guessedWord);
+                guessedWord = Dataset.NLP_GuessNextWord(guessedWord, 0.0009f);
                 generatedSentence += ' ' + guessedWord;
                 generatedWords++;
             }
